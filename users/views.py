@@ -1,11 +1,13 @@
+from urllib import request
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, UserSerializer
 
-from .serializers import RegisterSerializer, LoginSerializer
+from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
@@ -61,4 +63,43 @@ class RegisterView(APIView):
             # This will show you exactly what failed
             print(serializer.errors)  # Check your terminal/console
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ProfileView(APIView):
+
+    permission_classes=[IsAuthenticated]
+
+    def post(self, request):
+
+        if hasattr(request.user, "profile"):
+            return Response({"error": "Profile already exists"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = UserSerializer(data=request.data)
+
+        if serializer.is_valid():
+
+            serializer.save(user=request.user)
+
+            return Response(
+                {
+                    "message": "Profile created successfully",
+                    "data": serializer.data
+                },
+                status=status.HTTP_201_CREATED
+            )
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def get(self, request):
+        if not hasattr(request.user, "profile"):
+            return Response({"error": "Profile does not exist"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = UserSerializer(request.user.profile)
+
+        return Response(
+            {
+                "message": "Profile retrieved successfully",
+                "data": serializer.data
+            },
+            status=status.HTTP_200_OK
+        )
+
         

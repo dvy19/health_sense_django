@@ -1,6 +1,6 @@
 
 from rest_framework import serializers
-from .models import CustomUser
+from .models import CustomUser, UserProfile
 
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -47,3 +47,18 @@ class LoginSerializer(serializers.Serializer):
             "refresh": str(refresh),
             "role": user.role
         }
+    
+class UserSerializer(serializers.ModelSerializer):
+
+    user=serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = UserProfile
+        fields = ["user", "full_name", "gender", "city", "state", "age", "created_at", "updated_at" ]
+        read_only_fields = ["created_at", "updated_at" , "user"]
+
+    if(age := serializers.IntegerField(required=False)) is not None:
+        def validate_age(self, value):
+            if value < 0:
+                raise serializers.ValidationError("Age cannot be negative")
+            return value

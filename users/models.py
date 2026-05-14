@@ -46,3 +46,26 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.email} ({self.role})"
+
+class UserProfile(models.Model):
+
+    GENDER_CHOICES = [
+        ("male", "Male"),   
+        ("female", "Female"),
+        ("other", "Other"),
+    ]
+
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="profile")
+    full_name = models.CharField(max_length=30)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
+    city = models.CharField(max_length=50)
+    state = models.CharField(max_length=50)
+    age = models.PositiveIntegerField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+
+    def __str__(self):
+        return f"{self.full_name} ({self.user.gender})"
